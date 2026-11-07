@@ -197,25 +197,51 @@ $("signInForm").addEventListener("submit", async (event) => {
   event.preventDefault();
   const submit = $("signInSubmit");
   const message = $("signInMessage");
+  const email = $("emailInput").value.trim().toLowerCase();
+  const password = $("passwordInput").value;
+
+  if (!email.includes("@")) {
+    message.textContent = "Please enter the email address linked to your Deluxe account, not your Deluxe username.";
+    $("emailInput").focus();
+    return;
+  }
+
   submit.disabled = true;
   submit.textContent = "Signing in…";
   message.textContent = "Checking your Deluxe account…";
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email: $("emailInput").value.trim(),
-    password: $("passwordInput").value,
-  });
-  submit.disabled = false;
-  submit.textContent = "Sign in";
-  if (error) {
-    message.textContent = error.message;
-    return;
+
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      const friendly = {
+        "Invalid login credentials": "The email or password wasn't recognised. Use the same email address and password you use on Secret Unblocked Deluxe.",
+        "Email not confirmed": "This Deluxe account needs its email confirmed before it can sign in.",
+        "Too many requests": "There have been too many sign-in attempts. Wait a little and try again."
+      };
+      message.textContent = friendly[error.message] || error.message;
+      return;
+    }
+
+    const signedInUser = data?.user;
+    if (!signedInUser) {
+      message.textContent = "Deluxe didn't return a signed-in account. Please try again.";
+      return;
+    }
+
+    state.user = signedInUser;
+    state.profile = null;
+    await loadProfile();
+    updateAccount();
+    closeModal("signInModal");
+    $("passwordInput").value = "";
+    message.textContent = "Signed in.";
+    showToast("Connected to your Deluxe account.");
+  } catch (error) {
+    message.textContent = error?.message || "Couldn't connect to Deluxe authentication. Check your connection and try again.";
+  } finally {
+    submit.disabled = false;
+    submit.textContent = "Sign in";
   }
-  state.user = data.user;
-  await loadProfile();
-  updateAccount();
-  closeModal("signInModal");
-  $("passwordInput").value = "";
-  showToast("Connected to your Deluxe account.");
 });
 speechToggle.checked = localStorage.getItem("sitePilotSpeech") === "true";
 speechToggle.addEventListener("change", () => {

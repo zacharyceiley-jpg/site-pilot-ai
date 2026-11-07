@@ -7,7 +7,7 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const $ = (id) => document.getElementById(id);
-const state = { messages: [], user: null, sending: false, remaining: null };
+const state = { messages: [], user: null, profile: null, sending: false, remaining: null };
 const speechToggle = $("speechToggle");
 
 function showToast(message) {
@@ -23,7 +23,7 @@ function closeModal(id) { $(id).classList.add("hidden"); }
 
 function updateAccount() {
   const signedIn = Boolean(state.user);
-  const name = state.user?.user_metadata?.username || state.user?.user_metadata?.full_name || state.user?.email?.split("@")[0] || "Guest";
+  const name = state.profile?.username || state.user?.user_metadata?.username || state.user?.user_metadata?.full_name || state.user?.email?.split("@")[0] || "Guest";
   $("accountName").textContent = signedIn ? name : "Guest";
   $("accountStatus").textContent = signedIn ? "Deluxe account connected" : "80 messages per day";
   $("accountAvatar").textContent = signedIn ? name.slice(0, 1).toUpperCase() : "G";
@@ -96,13 +96,30 @@ function refreshChat() {
   $("chatArea").scrollTop = $("chatArea").scrollHeight;
 }
 
+async function loadProfile() {
+  if (!state.user) {
+    state.profile = null;
+    updateAccount();
+    return;
+  }
+  const { data } = await supabase
+    .from("profiles")
+    .select("username, avatar_url")
+    .eq("id", state.user.id)
+    .maybeSingle();
+  state.profile = data ?? null;
+  updateAccount();
+}
+
 async function loadSession() {
   const { data } = await supabase.auth.getSession();
   state.user = data.session?.user ?? null;
-  updateAccount();
+  await loadProfile();
   supabase.auth.onAuthStateChange((_event, session) => {
     state.user = session?.user ?? null;
+    state.profile = null;
     updateAccount();
+    if (state.user) void loadProfile();
   });
 }
 
@@ -194,6 +211,7 @@ $("signInForm").addEventListener("submit", async (event) => {
     return;
   }
   state.user = data.user;
+  await loadProfile();
   updateAccount();
   closeModal("signInModal");
   $("passwordInput").value = "";

@@ -243,6 +243,22 @@ $("signInForm").addEventListener("submit", async (event) => {
     submit.textContent = "Sign in";
   }
 });
+
+const glassLevel = $("glassLevel");
+const glassLevelValue = $("glassLevelValue");
+function applyGlassLevel(value, save = true) {
+  const level = Math.max(0, Math.min(100, Number(value) || 0));
+  const alpha = 1 - (level / 100) * 0.72;
+  document.documentElement.style.setProperty("--glass-alpha", alpha.toFixed(3));
+  document.documentElement.style.setProperty("--glass-blur", (level * 0.28).toFixed(1) + "px");
+  if (glassLevel) glassLevel.value = String(level);
+  if (glassLevelValue) glassLevelValue.textContent = level + "%";
+  if (save) localStorage.setItem("sitePilotGlassLevel", String(level));
+}
+let savedGlassLevel = 55;
+try { savedGlassLevel = Number(localStorage.getItem("sitePilotGlassLevel") ?? 55); } catch {}
+applyGlassLevel(savedGlassLevel, false);
+glassLevel?.addEventListener("input", () => applyGlassLevel(glassLevel.value));
 speechToggle.checked = localStorage.getItem("sitePilotSpeech") === "true";
 speechToggle.addEventListener("change", () => {
   localStorage.setItem("sitePilotSpeech", String(speechToggle.checked));

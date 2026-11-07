@@ -155,3 +155,13 @@ body{
 .glass-range-wrap input{width:130px;accent-color:#a99aff;padding:0}
 .glass-range-wrap output{min-width:38px;text-align:right;color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}
 @media(max-width:480px){.glass-setting-row{align-items:flex-start;flex-direction:column}.glass-range-wrap{width:100%}.glass-range-wrap input{flex:1}}
+
+/* User-adjustable glass intensity: 0 = solid, 100 = most translucent. */
+:root{--glass-alpha:.604;--glass-blur:15.4px}
+.sidebar{background:rgba(16,20,34,var(--glass-alpha));backdrop-filter:blur(var(--glass-blur)) saturate(160%);-webkit-backdrop-filter:blur(var(--glass-blur)) saturate(160%)}
+.topbar{background:rgba(12,16,29,calc(var(--glass-alpha) * .92));backdrop-filter:blur(var(--glass-blur)) saturate(160%);-webkit-backdrop-filter:blur(var(--glass-blur)) saturate(160%)}
+.new-chat,.suggestion,.account-card,.composer,.modal,.code-wrap,.toast{background:linear-gradient(145deg,rgba(255,255,255,calc((1 - var(--glass-alpha)) * .16)),rgba(255,255,255,calc((1 - var(--glass-alpha)) * .04))),rgba(25,30,49,var(--glass-alpha));backdrop-filter:blur(var(--glass-blur)) saturate(155%);-webkit-backdrop-filter:blur(var(--glass-blur)) saturate(155%)}
+.glass-range-wrap{display:flex;align-items:center;gap:12px;min-width:145px}
+.glass-range-wrap input{width:130px;accent-color:#a99aff;padding:0}
+.glass-range-wrap output{min-width:38px;text-align:right;color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}
+@media(max-width:480px){.glass-setting-row{align-items:flex-start;flex-direction:column}.glass-range-wrap{width:100%}.glass-range-wrap input{flex:1}}
